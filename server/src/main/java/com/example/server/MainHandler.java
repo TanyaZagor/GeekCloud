@@ -8,6 +8,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -31,25 +32,29 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
                 FileMessage fm = (FileMessage) msg;
                 if (!Files.exists(Paths.get("server_storage/" + fm.getFilename()))) {
                     Files.write(Paths.get("server_storage/" + fm.getFilename()), fm.getData(), StandardOpenOption.CREATE);
+                    ctx.writeAndFlush(getFileList());
                 }
             }
             if (msg instanceof FileDelete) {
                 FileDelete fd = (FileDelete) msg;
                 if (Files.exists(Paths.get("server_storage/" + fd.getFilename()))) {
                     Files.delete(Paths.get("server_storage/" + fd.getFilename()));
-                    ctx.writeAndFlush(fd);
+                    ctx.writeAndFlush(getFileList());
                 }
             }
             if (msg instanceof FileListServer) {
-                ArrayList<String> arr = new ArrayList<>();
-                Files.list(Paths.get("server_storage")).map(p -> p.getFileName().toString()).forEach(o -> arr.add(o));
-                FileListServer fileList = new FileListServer(arr);
-                ctx.writeAndFlush(fileList);
+                ctx.writeAndFlush(getFileList());
             }
 
         } finally {
             ReferenceCountUtil.release(msg);
         }
+    }
+
+    public FileListServer getFileList() throws IOException {
+        ArrayList<String> arr = new ArrayList<>();
+        Files.list(Paths.get("server_storage")).map(p -> p.getFileName().toString()).forEach(o -> arr.add(o));
+        return new FileListServer(arr);
     }
 
     @Override

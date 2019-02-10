@@ -53,9 +53,6 @@ public class MainController implements Initializable {
                             });
                         }
                     }
-                    if (am instanceof FileDelete) {
-                        refreshServerFilesList();
-                    }
                 }
             } catch (ClassNotFoundException | IOException e) {
                 e.printStackTrace();
@@ -116,7 +113,6 @@ public class MainController implements Initializable {
         }  else if(getSelected(filesList) != null) {
             Network.sendMsg(new FileMessage(Paths.get("client_storage/" + getSelected(filesList))));
         }
-        refreshServerFilesList();
     }
 
     public void pressOnDeleteServerBtn(ActionEvent actionEvent){
